@@ -42,7 +42,7 @@ void loop()
             if (i < len) Serial.print(buf[i], HEX); // only print the number of bytes in packet
         }
         Serial.print("\t"); // print a tab
-        Serial.println(millis() / 1000.0, 2); // print number of seconds to two decimal places
+        Serial.println((float)millis() / 1000.0, 2); // print number of seconds to two decimal places
     }
 }
 
