@@ -1,15 +1,10 @@
-// demo: CAN-BUS Shield, receive data with check mode
-// send data coming to fast, such as less than 10ms, you can use this way
-// loovee, 2014-6-13
-
-
 #include <SPI.h>
-#include "mcp_can.h"
-
+#include "mcp_can.h" // cd libraries && git clone https://github.com/Seeed-Studio/CAN_BUS_Shield.git
 
 // the cs pin of the version after v1.1 is default to D9
 // v0.9b and v1.0 is default D10
-const int SPI_CS_PIN = 10;
+const int SPI_CS_PIN = 10; // keith discovered setting this to 9 does not work
+long time_seconds = 0; // how many seconds since the last time we printed header
 
 MCP_CAN CAN(SPI_CS_PIN);                                    // Set CS pin
 
@@ -19,16 +14,17 @@ void setup()
 
     while (CAN_OK != CAN.begin(CAN_500KBPS))              // init can bus : baudrate = 500k
     {
-        Serial.println("CAN BUS Shield init fail");
-        Serial.println(" Init CAN BUS Shield again");
+        Serial.println("CAN BUS Shield init fail!   Init CAN BUS Shield again");
         delay(100);
     }
     Serial.println("CAN BUS Shield init ok!");
+    printHeader();
 }
-
 
 void loop()
 {
+    if (millis() / 1000 > time_seconds++) printHeader(); // print header once per second
+
     unsigned char len = 0;
     unsigned char buf[8];
 
@@ -38,19 +34,24 @@ void loop()
 
         unsigned int canId = CAN.getCanId();
         
-        Serial.println("-----------------------------");
-        Serial.print("Get data from ID: ");
-        Serial.println(canId, HEX);
+        Serial.print(canId, HEX);
 
-        for(int i = 0; i<len; i++)    // print the data
+        for(int i = 0; i<8; i++)    // print the data
         {
-            Serial.print(buf[i], HEX);
-            Serial.print("\t");
+            Serial.print("\t"); // print a tab no matter what
+            if (i < len) Serial.print(buf[i], HEX); // only print the number of bytes in packet
         }
-        Serial.println();
+        Serial.print("\t"); // print a tab
+        Serial.println(millis() / 1000.0, 2); // print number of seconds to two decimal places
     }
 }
 
-/*********************************************************************************************************
-  END FILE
-*********************************************************************************************************/
+void printHeader()
+{
+    Serial.print("CAN_ID\t");
+    for(int i = 0; i<8; i++) {
+        Serial.print("\t");
+        Serial.print(i); // print data byte number
+    }
+    Serial.println("\ttime");
+}
